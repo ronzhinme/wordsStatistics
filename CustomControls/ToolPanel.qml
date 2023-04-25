@@ -1,13 +1,16 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.5
-import Qt.labs.platform 1.1
+import QtQuick.Dialogs
 
 ToolBar
 {
     FileDialog {
         id: openFileDialog
         fileMode: FileDialog.OpenFile
+        onAccepted: {
+            filePath.text = selectedFile
+        }
     }
 
     ColumnLayout {
@@ -19,9 +22,10 @@ ToolBar
                 }
             }
 
-            Text {
+           Text {
                 id: filePath
-                text: openFileDialog.file
+                color: "gray"
+                text: "Selected file path"
             }
         }
 
@@ -31,7 +35,7 @@ ToolBar
             property bool statePaused : false
             ToolButton {
                 text: qsTr("Start")
-                enabled: !parent.stateStarted && filePath.text !== ""
+                enabled: !parent.stateStarted && openFileDialog.selectedFile !== ""
                 onClicked: {
                     parent.stateStarted = !parent.stateStarted
                 }
