@@ -12,7 +12,7 @@ Window {
     {
         anchors.fill: parent
         anchors.margins: 5
-        spacing: 5
+        spacing: 10
 
         ToolPanel {
             Layout.fillWidth: true
@@ -21,7 +21,7 @@ Window {
         Histogram {
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignBottom
+            model: 15
         }
 
         ProgressBar {

@@ -2,18 +2,28 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.3
 
 Item {
+    property alias model: repeater.model
     id: root
-    RowLayout {
+
+    ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 1
 
         Repeater {
-            model: 15
-            Rectangle {
-                Layout.alignment: Qt.AlignBottom
-                height: 0 + (10 * index)
-                width: root.width / 20
-                color: "green"
+            id: repeater
+
+            Item {
+                Rectangle {
+                    width: 1 + (root.width / 100) * index
+                    height: root.height / (repeater.count + 2)
+                    color: "green"
+                }
+
+                Text {
+                    text: "word : " + index
+                }
+
+                Behavior on y {SpringAnimation { spring: 2; damping: 0.2} }
             }
         }
     }
