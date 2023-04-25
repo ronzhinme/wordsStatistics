@@ -5,6 +5,8 @@ import QtQuick.Controls 2.5
 Window {
     width: 640
     height: 480
+    minimumHeight: 400
+    minimumWidth: 200
     visible: true
     title: qsTr("Words Statistics")
 
