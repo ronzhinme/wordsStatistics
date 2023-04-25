@@ -21,6 +21,7 @@ Window {
         Histogram {
             Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignBottom
         }
 
         ProgressBar {
