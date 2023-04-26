@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(words_statistics VERSION 0.1 LANGUAGES CXX)
+project(wordsStatistics VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.2 COMPONENTS Quick REQUIRED)
@@ -14,7 +15,9 @@ qt_add_executable(appwords_statistics
 qt_add_qml_module(appwords_statistics
     URI words_statistics
     VERSION 1.0
-    QML_FILES main.qml 
+    QML_FILES main.qml
+    CustomControls/ToolPanel.qml
+    CustomControls/Histogram.qml
 )
 
 set_target_properties(appwords_statistics PROPERTIES
