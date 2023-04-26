@@ -16,7 +16,7 @@ void WordsStatisticsModel::appendWord(const QString &word)
 
     if(iter == wordMap_.end())
     {
-        beginInsertRows(index(row,0), row, row);
+        beginInsertRows(index(row), row, row);
         ++wordMap_[word];
         endInsertRows();
         return;
