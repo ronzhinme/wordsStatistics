@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
-    QScopedPointer<WordsStatisticsModel> wordsModel(new WordsStatisticsModel);
+    QSharedPointer<WordsStatisticsModel> wordsModel(new WordsStatisticsModel);
     qmlRegisterSingletonInstance("WordModelInstance", 1, 0, "WordModelInstance", wordsModel.get());
 
     const QUrl url(u"qrc:/words_statistics/main.qml"_qs);
@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
 
     engine.load(url);
 
-    WorkThread thread;
-    wordsModel->connect(&thread, &WorkThread::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
-    thread.start();
+    Controller controller;
+    wordsModel->connect(&controller, &Controller::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
+    controller.start();
 
     return app.exec();
 }
