@@ -9,10 +9,20 @@ WordsStatisticsModel::WordsStatisticsModel()
 
 void WordsStatisticsModel::appendWord(const QString &word)
 {
-    ++wordMap_[word];
     ++totalWordCount_;
-    emit sigTotalWordsCountChanged();
-    emit layoutChanged();
+
+    const auto iter = wordMap_.find(word);
+    const auto row = std::distance(wordMap_.begin(), iter);
+
+    if(iter == wordMap_.end())
+    {
+        beginInsertRows(index(row,0), row, row);
+        ++wordMap_[word];
+        endInsertRows();
+        return;
+    }
+
+    setData(index(row), QVariant::fromValue(wordMap_[word] + 1));
 }
 
 quint64 WordsStatisticsModel::getTotalWordCount() const
@@ -49,4 +59,27 @@ QVariant WordsStatisticsModel::data(const QModelIndex &index, int role) const
 QHash<int, QByteArray> WordsStatisticsModel::roleNames() const
 {
     return roles_;
+}
+
+bool WordsStatisticsModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+    {
+        return false;
+    }
+
+    auto iter = wordMap_.begin();
+    std::advance(iter, index.row());
+
+    switch (role)
+    {
+    case Qt::EditRole:
+    {
+        iter->second = value.toLongLong();
+        emit dataChanged(index, index);
+        return true;
+    }
+    default:
+        return false;
+    }
 }
