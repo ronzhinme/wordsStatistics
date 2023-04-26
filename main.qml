@@ -23,7 +23,6 @@ Window {
         Histogram {
             Layout.fillHeight: true
             Layout.fillWidth: true
-            model: 15
         }
 
         ProgressBar {
