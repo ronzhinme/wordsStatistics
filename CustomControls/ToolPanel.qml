@@ -3,8 +3,14 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.5
 import QtQuick.Dialogs
 
+import ControllerInstance 1.0
+
 ToolBar
 {
+    id: toolbar
+    property bool stateStarted : false
+    property bool statePaused : false
+
     FileDialog {
         id: openFileDialog
         fileMode: FileDialog.OpenFile
@@ -17,6 +23,7 @@ ToolBar
         RowLayout {
             ToolButton {
                 text: qsTr("Open")
+                enabled: !toolbar.stateStarted
                 onClicked: {
                     openFileDialog.open()
                 }
@@ -31,29 +38,28 @@ ToolBar
 
         RowLayout
         {
-            property bool stateStarted : false
-            property bool statePaused : false
             ToolButton {
                 text: qsTr("Start")
-                enabled: !parent.stateStarted && openFileDialog.selectedFile !== ""
+                enabled: !toolbar.stateStarted && filePath.text.startsWith("file:/")
                 onClicked: {
-                    parent.stateStarted = !parent.stateStarted
+                    toolbar.stateStarted = !toolbar.stateStarted
+                    ControllerInstance.start(filePath.text)
                 }
             }
 
             ToolButton {
-                text: parent.statePaused ? qsTr("Resume") : qsTr("Pause")
-                enabled: parent.stateStarted
+                text: toolbar.statePaused ? qsTr("Resume") : qsTr("Pause")
+                enabled: toolbar.stateStarted
                 onClicked: {
-                    parent.statePaused = !parent.statePaused
+                    toolbar.statePaused = !toolbar.statePaused
                 }
             }
 
             ToolButton {
                 text: qsTr("Cancel")
-                enabled: parent.stateStarted
+                enabled: toolbar.stateStarted
                 onClicked: {
-                    parent.statePaused = parent.stateStarted = false
+                    toolbar.statePaused = toolbar.stateStarted = false
                 }
             }
         }

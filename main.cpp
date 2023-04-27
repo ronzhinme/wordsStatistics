@@ -1,16 +1,21 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include <QThread>
 #include "wordsstatisticsmodel.h"
+#include "controller.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
-    QSharedPointer<WordsStatisticsModel> wordsModel(new WordsStatisticsModel);
+    QScopedPointer<WordsStatisticsModel> wordsModel(new WordsStatisticsModel);
+    QScopedPointer<Controller> controller(new Controller);
+
+    wordsModel->connect(controller.get(), &Controller::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
+
     qmlRegisterSingletonInstance("WordModelInstance", 1, 0, "WordModelInstance", wordsModel.get());
+    qmlRegisterSingletonInstance("ControllerInstance", 1, 0, "ControllerInstance", controller.get());
 
     const QUrl url(u"qrc:/words_statistics/main.qml"_qs);
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
@@ -20,11 +25,6 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
 
     engine.load(url);
-
-    Controller controller;
-    wordsModel->connect(&controller, &Controller::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
-    controller.start();
-
     return app.exec();
 }
 
