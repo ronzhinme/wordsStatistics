@@ -52,6 +52,11 @@ ToolBar
                 enabled: toolbar.stateStarted
                 onClicked: {
                     toolbar.statePaused = !toolbar.statePaused
+                    if(toolbar.statePaused) {
+                        ControllerInstance.pause()
+                    } else {
+                        ControllerInstance.resume()
+                    }
                 }
             }
 
@@ -60,6 +65,7 @@ ToolBar
                 enabled: toolbar.stateStarted
                 onClicked: {
                     toolbar.statePaused = toolbar.stateStarted = false
+                    ControllerInstance.cancel()
                 }
             }
         }

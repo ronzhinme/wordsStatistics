@@ -25,6 +25,13 @@ void WordsStatisticsModel::appendWord(const QString &word)
     setData(index(row), QVariant::fromValue(wordMap_[word] + 1));
 }
 
+void WordsStatisticsModel::clearModel()
+{
+    beginResetModel();
+    wordMap_.clear();
+    endResetModel();
+}
+
 quint64 WordsStatisticsModel::getTotalWordCount() const
 {
     return totalWordCount_;

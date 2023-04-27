@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     QScopedPointer<Controller> controller(new Controller);
 
     wordsModel->connect(controller.get(), &Controller::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
+    wordsModel->connect(controller.get(), &Controller::sigStarted, wordsModel.get(), &WordsStatisticsModel::clearModel);
 
     qmlRegisterSingletonInstance("WordModelInstance", 1, 0, "WordModelInstance", wordsModel.get());
     qmlRegisterSingletonInstance("ControllerInstance", 1, 0, "ControllerInstance", controller.get());

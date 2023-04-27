@@ -14,7 +14,7 @@ public:
 
 public slots:
     void appendWord(const QString& word);
-
+    void clearModel();
 private:
     quint64 totalWordCount_;
     std::unordered_map<QString, quint64> wordMap_;
