@@ -10,6 +10,7 @@ find_package(Qt6 6.2 COMPONENTS Quick REQUIRED)
 
 qt_add_executable(appwords_statistics
     main.cpp
+    wordsstatisticsmodel.cpp
 )
 
 qt_add_qml_module(appwords_statistics

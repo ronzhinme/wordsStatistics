@@ -1,19 +1,29 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
+#include <QThread>
+#include "wordsstatisticsmodel.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-
     QQmlApplicationEngine engine;
+
+    QSharedPointer<WordsStatisticsModel> wordsModel(new WordsStatisticsModel);
+    qmlRegisterSingletonInstance("WordModelInstance", 1, 0, "WordModelInstance", wordsModel.get());
+
     const QUrl url(u"qrc:/words_statistics/main.qml"_qs);
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
         if (!obj && url == objUrl)
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
+
     engine.load(url);
+
+    Controller controller;
+    wordsModel->connect(&controller, &Controller::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
+    controller.start();
 
     return app.exec();
 }
