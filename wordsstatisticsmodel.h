@@ -1,32 +1,31 @@
 #ifndef WORDSSTATISTICSMODEL_H
 #define WORDSSTATISTICSMODEL_H
 
+#include "qtmetamacros.h"
 #include <QAbstractItemModel>
-#include <QThread>
-
-#include <QGuiApplication>
-#include <QRandomGenerator>
-#include <QDateTime>
 
 class WordsStatisticsModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(quint64 totalWordCount READ getTotalWordCount NOTIFY sigTotalWordsCountChanged)
+    Q_PROPERTY(quint64 totalWordCount READ totalWordCount NOTIFY sigTotalWordsCountChanged)
+    Q_PROPERTY(double percentage READ percentage WRITE setPercentage NOTIFY sigPercentageChanged)
 public:
     WordsStatisticsModel();
-
-    quint64 getTotalWordCount() const;
+    quint64 totalWordCount() const;
 
 public slots:
     void appendWord(const QString& word);
-
+    void clearModel();
+    void setPercentage(double val);
+    double percentage() const;
 private:
-    quint64 totalWordCount_;
     std::unordered_map<QString, quint64> wordMap_;
     QHash<int, QByteArray> roles_ {{Qt::DisplayRole, "display"}, {Qt::UserRole + 1, "wordCount"}};
-
+    double percentage_;
+    quint64 totalWordCount_;
 signals:
     void sigTotalWordsCountChanged();
+    void sigPercentageChanged();
 
     // QAbstractItemModel interface
 public:
@@ -34,52 +33,6 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-};
-
-class Worker : public QObject
-{
-    Q_OBJECT
-public slots:
-    void doWork()
-    {
-        QRandomGenerator64 randGen(QDateTime::currentDateTime().toSecsSinceEpoch());
-        while(!QThread::currentThread()->isInterruptionRequested())
-        {
-            emit sigProcessWord(QStringLiteral("Word_%1").arg((randGen.generate() & 0xF) % 10));
-            QThread::currentThread()->usleep(10);
-        }
-    }
-
-signals:
-    void sigProcessWord(const QString &word);
-};
-
-class Controller : public QObject
-{
-    Q_OBJECT
-public:
-    Controller() {
-    }
-    ~Controller() {
-        workerThread_.requestInterruption();
-        workerThread_.quit();
-        workerThread_.wait();
-    }
-
-    void start()
-    {
-        worker_ = new Worker;
-        worker_->moveToThread(&workerThread_);
-        connect(&workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
-        connect(&workerThread_, &QThread::started, worker_, &Worker::doWork);
-        connect(worker_, &Worker::sigProcessWord, this, &Controller::sigProcessWord);
-        workerThread_.start();
-    }
-signals:
-    void sigProcessWord(const QString &word);
-private:
-    QThread workerThread_;
-    Worker* worker_; // deleteLater
 };
 
 #endif // WORDSSTATISTICSMODEL_H
