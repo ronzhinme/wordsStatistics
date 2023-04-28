@@ -1,8 +1,7 @@
 #include "controller.h"
 
+#include <QUrl>
 
-#include <QDateTime>
-#include <QRandomGenerator>
 Worker::Worker()
     : QObject()
     , state_(WorkerState::kIdle)
@@ -12,10 +11,10 @@ Worker::Worker()
 
 void Worker::doWork()
 {
-    QRandomGenerator64 randGen(QDateTime::currentDateTime().toSecsSinceEpoch());
-
     state_ = WorkerState::kWork;
-    while(!QThread::currentThread()->isInterruptionRequested() && state_ != WorkerState::kCancel)
+
+    WordFileParser fileParser(filename_);
+    while(!QThread::currentThread()->isInterruptionRequested() && state_ != WorkerState::kCancel && !fileParser.atEnd())
     {
         if(state_ == WorkerState::kPause)
         {
@@ -23,10 +22,20 @@ void Worker::doWork()
             continue;
         }
 
-        emit sigProcessWord(QStringLiteral("Word_%1").arg(randGen.generate() & 0xF));
+        const auto word = fileParser.getNextWord();
+        const auto percentage = fileParser.getProcessPercentage();
+        if(word.isEmpty())
+        {
+            continue;
+        }
+
+        emit sigProcessWord(word);
+        emit sigPercentageChanged(percentage);
         QThread::currentThread()->usleep(10);
     }
 
+    emit sigPercentageChanged(100.0);
+    QThread::currentThread()->usleep(10);
     state_ = WorkerState::kIdle;
 }
 
@@ -74,7 +83,9 @@ Controller::Controller()
 {
     worker_.moveToThread(&workerThread_);
     connect(&workerThread_, &QThread::started, &worker_, &Worker::doWork);
+    connect(&workerThread_, &QThread::finished, this, [this](){emit sigPercentageChanged(100.0);});
     connect(&worker_, &Worker::sigProcessWord, this, &Controller::sigProcessWord);
+    connect(&worker_, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged);
 }
 
 Controller::~Controller()
@@ -109,4 +120,56 @@ void Controller::cancel()
     worker_.requestChangeState(WorkerState::kCancel);
     workerThread_.quit();
     workerThread_.wait();
+}
+
+WordFileParser::WordFileParser(const QString &filename)
+    : file_(QUrl(filename).toLocalFile())
+{
+    if(!file_.open(QIODevice::ReadOnly))
+    {
+        return;
+    }
+
+    totalBytes_ = file_.size();
+}
+
+QString WordFileParser::getNextWord()
+{
+    if(!file_.isOpen() || totalBytes_ == 0)
+    {
+        return {};
+    }
+
+    QByteArray result;
+    while (!file_.atEnd())
+    {
+        char ch;
+        file_.read(&ch, 1);
+        if(!std::isspace(ch) && !std::ispunct(ch)) // словом считаю любую последовательность символов, но не разрывы и пунктуацию
+            result.append(ch);
+        else
+            break;
+    }
+
+    return result;
+}
+
+double WordFileParser::getProcessPercentage() const
+{
+    if(!file_.isOpen() || totalBytes_ == 0)
+    {
+        return 0;
+    }
+
+    return static_cast<double>(file_.pos()) / (static_cast<double>(totalBytes_) / 100.0);
+}
+
+bool WordFileParser::atEnd()
+{
+    if(!file_.isOpen() || totalBytes_ == 0)
+    {
+        return true;
+    }
+
+    return file_.atEnd();
 }

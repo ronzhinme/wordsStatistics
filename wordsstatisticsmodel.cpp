@@ -3,13 +3,20 @@
 WordsStatisticsModel::WordsStatisticsModel()
     : QAbstractListModel()
     , totalWordCount_(0)
+    , percentage_(0)
 {
 
+}
+
+quint64 WordsStatisticsModel::totalWordCount() const
+{
+    return totalWordCount_;
 }
 
 void WordsStatisticsModel::appendWord(const QString &word)
 {
     ++totalWordCount_;
+    emit sigTotalWordsCountChanged();
 
     const auto iter = wordMap_.find(word);
     const auto row = std::distance(wordMap_.begin(), iter);
@@ -32,9 +39,15 @@ void WordsStatisticsModel::clearModel()
     endResetModel();
 }
 
-quint64 WordsStatisticsModel::getTotalWordCount() const
+void WordsStatisticsModel::setPercentage(double val)
 {
-    return totalWordCount_;
+    percentage_ = val;
+    emit sigPercentageChanged();
+}
+
+double WordsStatisticsModel::percentage() const
+{
+    return percentage_;
 }
 
 int WordsStatisticsModel::rowCount(const QModelIndex &parent) const

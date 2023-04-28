@@ -3,6 +3,19 @@
 
 #include <QObject>
 #include <QThread>
+#include <QFile>
+
+class WordFileParser
+{
+public:
+    WordFileParser(const QString &filename);
+    QString getNextWord();
+    double getProcessPercentage() const;
+    bool atEnd();
+private:
+    size_t totalBytes_;
+    QFile file_;
+};
 
 enum class WorkerState
 {
@@ -24,6 +37,7 @@ public slots:
     void setFileName(const QString & filename);
 signals:
     void sigProcessWord(const QString &word);
+    void sigPercentageChanged(double percentage);
 private:
     WorkerState state_;
     QString filename_;
@@ -42,6 +56,7 @@ public:
 signals:
     void sigStarted();
     void sigProcessWord(const QString &word);
+    void sigPercentageChanged(double percentage);
     void sigPauseRequest();
     void sigResumeRequest();
 private:

@@ -1,27 +1,31 @@
 #ifndef WORDSSTATISTICSMODEL_H
 #define WORDSSTATISTICSMODEL_H
 
+#include "qtmetamacros.h"
 #include <QAbstractItemModel>
 
 class WordsStatisticsModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(quint64 totalWordCount READ getTotalWordCount NOTIFY sigTotalWordsCountChanged)
+    Q_PROPERTY(quint64 totalWordCount READ totalWordCount NOTIFY sigTotalWordsCountChanged)
+    Q_PROPERTY(double percentage READ percentage WRITE setPercentage NOTIFY sigPercentageChanged)
 public:
     WordsStatisticsModel();
-
-    quint64 getTotalWordCount() const;
+    quint64 totalWordCount() const;
 
 public slots:
     void appendWord(const QString& word);
     void clearModel();
+    void setPercentage(double val);
+    double percentage() const;
 private:
-    quint64 totalWordCount_;
     std::unordered_map<QString, quint64> wordMap_;
     QHash<int, QByteArray> roles_ {{Qt::DisplayRole, "display"}, {Qt::UserRole + 1, "wordCount"}};
-
+    double percentage_;
+    quint64 totalWordCount_;
 signals:
     void sigTotalWordsCountChanged();
+    void sigPercentageChanged();
 
     // QAbstractItemModel interface
 public:
