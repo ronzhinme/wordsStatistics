@@ -31,11 +31,11 @@ void Worker::doWork()
 
         emit sigProcessWord(word);
         emit sigPercentageChanged(percentage);
-        QThread::currentThread()->usleep(10);
+        QThread::currentThread()->usleep(0);
     }
 
     emit sigPercentageChanged(100.0);
-    QThread::currentThread()->usleep(10);
+    QThread::currentThread()->usleep(0);
     state_ = WorkerState::kIdle;
 }
 
