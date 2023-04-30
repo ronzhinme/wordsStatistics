@@ -18,24 +18,26 @@ void WordsStatisticsModel::appendWord(const QString &word)
     ++totalWordCount_;
     emit sigTotalWordsCountChanged();
 
-    const auto iter = wordMap_.find(word);
-    const auto row = std::distance(wordMap_.begin(), iter);
+    const auto iter = std::find_if(words_.begin(), words_.end(), [&word](const QPair<QString, quint64> x){return x.first == word;});
+    const auto row = std::distance(words_.begin(), iter);
 
-    if(iter == wordMap_.end())
+    if(iter == words_.end())
     {
         beginInsertRows(index(row), row, row);
-        ++wordMap_[word];
+        words_.push_back({word, 1});
         endInsertRows();
         return;
     }
 
-    setData(index(row), QVariant::fromValue(wordMap_[word] + 1));
+    setData(index(row), QVariant::fromValue(iter->second + 1));
 }
 
 void WordsStatisticsModel::clearModel()
 {
     beginResetModel();
-    wordMap_.clear();
+    words_.clear();
+    totalWordCount_ = 0;
+    emit sigTotalWordsCountChanged();
     endResetModel();
 }
 
@@ -52,7 +54,7 @@ double WordsStatisticsModel::percentage() const
 
 int WordsStatisticsModel::rowCount(const QModelIndex &parent) const
 {
-    return wordMap_.size();
+    return words_.size();
 }
 
 QVariant WordsStatisticsModel::data(const QModelIndex &index, int role) const
@@ -62,7 +64,7 @@ QVariant WordsStatisticsModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    auto iter = wordMap_.begin();
+    auto iter = words_.begin();
     std::advance(iter, index.row());
 
     switch (role)
@@ -88,7 +90,7 @@ bool WordsStatisticsModel::setData(const QModelIndex &index, const QVariant &val
         return false;
     }
 
-    auto iter = wordMap_.begin();
+    auto iter = words_.begin();
     std::advance(iter, index.row());
 
     switch (role)
@@ -102,4 +104,16 @@ bool WordsStatisticsModel::setData(const QModelIndex &index, const QVariant &val
     default:
         return false;
     }
+}
+
+bool SortAndFilterProxy::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+{
+    const auto lastAccessibleRowWordCount = index(14, 0).data(sortRole()).toUInt();
+    const auto sourceRowWordCount = sourceModel()->index(source_row, 0, source_parent).data(sortRole()).toUInt();
+    return sourceRowWordCount > lastAccessibleRowWordCount;
+}
+
+bool SortAndFilterProxy::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
+{
+    return !(source_left.data(sortRole()).toUInt() > source_right.data(sortRole()).toUInt());
 }

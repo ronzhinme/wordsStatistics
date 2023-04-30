@@ -32,6 +32,11 @@ Window {
             from: 0
             to: 100
             value: WordModelInstance.percentage
+
+            Text {
+                anchors.centerIn: parent
+                text: "Processed words:" + WordModelInstance.totalWordCount + " = " + WordModelInstance.percentage.toFixed(2) + " %"
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.3
 
 import WordModelInstance 1.0
+import SortFilterProxyInstance 1.0
 
 Item {
     id: root
@@ -12,20 +13,24 @@ Item {
 
         Repeater {
             id: repeater
-            model: WordModelInstance
+            model: SortFilterProxyInstance
 
             Item {
+                visible: index < SortFilterProxyInstance.maxRows
+
                 Rectangle {
-                    width: (root.width / 100) * (wordCount / (WordModelInstance.totalWordCount / 100))
-                    height: root.height / (repeater.count + 2)
-                    color: "green"
+                    id: rect
+                    readonly property real percentage: wordCount / (WordModelInstance.totalWordCount / 100)
+                    width: (root.width / 100) * percentage
+                    height: (root.height / SortFilterProxyInstance.maxRows) - 2
+                    color: "lightgreen"
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
-                    text: display + " : " + wordCount
+                    text: "["+ display + "] : " + wordCount + " ("+rect.percentage.toFixed(2)+" %)"
+                    anchors.verticalCenter: parent.verticalCenter
                 }
-
-                Behavior on y {SpringAnimation { spring: 2; damping: 0.2} }
             }
         }
     }
