@@ -59,10 +59,17 @@ void Worker::requestChangeState(WorkerState state)
         state_ = state;
         break;
     }
-    case WorkerState::kIdle: [[fallthrough]];
+    case WorkerState::kIdle:
+    {
+        if(state_ != WorkerState::kCancel)
+            break;
+
+        state_ = state;
+        break;
+    }
     case WorkerState::kCancel:
     {
-        state_ = WorkerState::kIdle;
+        state_ = state;
         break;
     }
     }
@@ -97,7 +104,7 @@ Controller::~Controller()
 
 void Controller::start(const QString &filename)
 {
-    if(worker_.state() == WorkerState::kIdle)
+    if(worker_.state() == WorkerState::kIdle || worker_.state() == WorkerState::kCancel)
     {
         emit sigStarted();
         worker_.setFileName(filename);
