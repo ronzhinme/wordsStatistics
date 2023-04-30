@@ -3,6 +3,7 @@
 
 #include "qtmetamacros.h"
 #include <QAbstractItemModel>
+#include <QSortFilterProxyModel>
 
 class WordsStatisticsModel : public QAbstractListModel
 {
@@ -19,7 +20,7 @@ public slots:
     void setPercentage(double val);
     double percentage() const;
 private:
-    std::unordered_map<QString, quint64> wordMap_;
+    QList<QPair<QString, quint64>> words_;
     QHash<int, QByteArray> roles_ {{Qt::DisplayRole, "display"}, {Qt::UserRole + 1, "wordCount"}};
     double percentage_;
     quint64 totalWordCount_;
@@ -33,6 +34,23 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+};
+
+class SortAndFilterProxy : public QSortFilterProxyModel
+{
+    Q_OBJECT
+    Q_PROPERTY(quint64 maxRows READ maxRows WRITE setMaxRows NOTIFY maxRowsChanged)
+public:
+    void setMaxRows(quint64 val){maxRows_ = val; emit maxRowsChanged();}
+    quint64 maxRows()const {return maxRows_;}
+private:
+    quint64 maxRows_= 1000;
+signals:
+    void maxRowsChanged();
+    // QSortFilterProxyModel interface
+protected:
+    virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
+    virtual bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 };
 
 #endif // WORDSSTATISTICSMODEL_H

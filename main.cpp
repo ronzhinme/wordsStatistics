@@ -9,13 +9,24 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
+    QScopedPointer<SortAndFilterProxy> sortFilterProxy(new SortAndFilterProxy);
     QScopedPointer<WordsStatisticsModel> wordsModel(new WordsStatisticsModel);
     QScopedPointer<Controller> controller(new Controller);
 
-    wordsModel->connect(controller.get(), &Controller::sigProcessWord, wordsModel.get(), &WordsStatisticsModel::appendWord);
+    sortFilterProxy->setMaxRows(15);
+    sortFilterProxy->setSourceModel(wordsModel.get());
+    sortFilterProxy->setSortRole(Qt::UserRole + 1); // todo: role name!
+
+    wordsModel->connect(controller.get(), &Controller::sigProcessWord, wordsModel.get()
+                        , [model =wordsModel.get(), proxy = sortFilterProxy.get()](const QString &word)
+    {
+        model->appendWord(word);
+        proxy->sort(0, Qt::DescendingOrder);
+    });
     wordsModel->connect(controller.get(), &Controller::sigPercentageChanged, wordsModel.get(), &WordsStatisticsModel::setPercentage);
     wordsModel->connect(controller.get(), &Controller::sigStarted, wordsModel.get(), &WordsStatisticsModel::clearModel);
 
+    qmlRegisterSingletonInstance("SortFilterProxyInstance", 1, 0, "SortFilterProxyInstance", sortFilterProxy.get());
     qmlRegisterSingletonInstance("WordModelInstance", 1, 0, "WordModelInstance", wordsModel.get());
     qmlRegisterSingletonInstance("ControllerInstance", 1, 0, "ControllerInstance", controller.get());
 

@@ -62,7 +62,7 @@ void Worker::requestChangeState(WorkerState state)
     case WorkerState::kIdle: [[fallthrough]];
     case WorkerState::kCancel:
     {
-        state_ = state;
+        state_ = WorkerState::kIdle;
         break;
     }
     }
