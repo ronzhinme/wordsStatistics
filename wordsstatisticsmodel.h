@@ -43,18 +43,22 @@ public:
 class SortAndFilterProxy : public QSortFilterProxyModel
 {
     Q_OBJECT
-    Q_PROPERTY(quint64 maxRows READ maxRows WRITE setMaxRows NOTIFY maxRowsChanged)
+    Q_PROPERTY(int maxRows READ maxRows NOTIFY maxRowsChanged)
 public:
-    void setMaxRows(quint64 val){maxRows_ = val; emit maxRowsChanged();}
-    quint64 maxRows()const {return maxRows_;}
+    void setMaxRows(int val){maxRows_ = val; emit maxRowsChanged();}
+    int maxRows()const {return maxRows_.has_value() ? maxRows_.value() : rowCount();}
 private:
-    quint64 maxRows_= 1000;
+    std::optional<int> maxRows_;
 signals:
     void maxRowsChanged();
     // QSortFilterProxyModel interface
 protected:
     virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
     virtual bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
+
+    // QAbstractItemModel interface
+public:
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 };
 
 #endif // WORDSSTATISTICSMODEL_H
