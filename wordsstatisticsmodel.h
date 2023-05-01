@@ -10,10 +10,10 @@ class WordsStatisticsModel : public QAbstractListModel
     Q_OBJECT
     Q_PROPERTY(quint64 totalWordCount READ totalWordCount NOTIFY sigTotalWordsCountChanged)
     Q_PROPERTY(double percentage READ percentage WRITE setPercentage NOTIFY sigPercentageChanged)
+    Q_PROPERTY(QString progressText READ progressText NOTIFY sigPercentageChanged)
 public:
     WordsStatisticsModel();
     quint64 totalWordCount() const;
-
 public slots:
     void appendWord(const QString& word);
     void clearModel();
@@ -21,9 +21,13 @@ public slots:
     double percentage() const;
 private:
     QList<QPair<QString, quint64>> words_;
-    QHash<int, QByteArray> roles_ {{Qt::DisplayRole, "display"}, {Qt::UserRole + 1, "wordCount"}};
+    QHash<int, QByteArray> roles_ {{Qt::DisplayRole, "display"},
+                                   {Qt::UserRole + 1, "wordCount"},
+                                   {Qt::UserRole + 2, "wordPercentage"},
+                                   {Qt::UserRole + 3, "wordStatText"}};
     double percentage_;
     quint64 totalWordCount_;
+    QString progressText() const;
 signals:
     void sigTotalWordsCountChanged();
     void sigPercentageChanged();

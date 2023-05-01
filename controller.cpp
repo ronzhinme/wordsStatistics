@@ -22,15 +22,16 @@ void Worker::doWork()
             continue;
         }
 
-        const auto word = fileParser.getNextWord();
         const auto percentage = fileParser.getProcessPercentage();
-        if(word.isEmpty())
+        emit sigPercentageChanged(percentage);
+
+        const auto word = fileParser.getNextWord();
+        if(word.trimmed().isEmpty())
         {
             continue;
         }
 
         emit sigProcessWord(word);
-        emit sigPercentageChanged(percentage);
         QThread::currentThread()->usleep(0);
     }
 
@@ -152,7 +153,7 @@ QString WordFileParser::getNextWord()
     {
         char ch;
         file_.read(&ch, 1);
-        if(!std::isspace(ch) && !std::ispunct(ch)) // словом считаю любую последовательность символов, но не разрывы и пунктуацию
+        if(!std::isspace(ch) && !std::ispunct(ch) && std::isgraph(ch)) // словом считаю любую печатную последовательность символов, но не разрывы и пунктуацию
             result.append(ch);
         else
             break;

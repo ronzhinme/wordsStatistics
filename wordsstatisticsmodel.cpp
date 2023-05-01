@@ -52,6 +52,11 @@ double WordsStatisticsModel::percentage() const
     return percentage_;
 }
 
+QString WordsStatisticsModel::progressText() const
+{
+ return QString("Processed words: %1 = %2 %").arg(totalWordCount_).arg(QString::number(percentage_, 'f', 2));
+}
+
 int WordsStatisticsModel::rowCount(const QModelIndex &parent) const
 {
     return words_.size();
@@ -73,6 +78,13 @@ QVariant WordsStatisticsModel::data(const QModelIndex &index, int role) const
         return iter->first;
     case Qt::UserRole + 1:
         return iter->second;
+    case Qt::UserRole + 2:
+        return static_cast<double>(iter->second) / percentage_;
+    case Qt::UserRole + 3:
+    {
+        const auto wordPercentage = QString::number(static_cast<double>(iter->second) / percentage_, 'f', 2);
+        return QVariant::fromValue(QString("[%1] : %2 (%3%)").arg(iter->first).arg(iter->second).arg(wordPercentage));
+    }
     default:
         return QVariant();
     }
@@ -108,7 +120,7 @@ bool WordsStatisticsModel::setData(const QModelIndex &index, const QVariant &val
 
 bool SortAndFilterProxy::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
-    const auto lastAccessibleRowWordCount = index(14, 0).data(sortRole()).toUInt();
+    const auto lastAccessibleRowWordCount = index(maxRows_, 0).data(sortRole()).toUInt();
     const auto sourceRowWordCount = sourceModel()->index(source_row, 0, source_parent).data(sortRole()).toUInt();
     return sourceRowWordCount > lastAccessibleRowWordCount;
 }
