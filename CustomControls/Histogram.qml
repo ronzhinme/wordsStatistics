@@ -20,15 +20,14 @@ Item {
 
                 Rectangle {
                     id: rect
-                    readonly property real percentage: wordCount / (WordModelInstance.totalWordCount / 100)
-                    width: (root.width / 100) * percentage
+                    width: (root.width / 100) * wordPercentage
                     height: (root.height / SortFilterProxyInstance.maxRows) - 2
                     color: "lightgreen"
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
-                    text: "["+ display + "] : " + wordCount + " ("+rect.percentage.toFixed(2)+" %)"
+                    text: wordStatText
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }

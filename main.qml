@@ -35,7 +35,7 @@ Window {
 
             Text {
                 anchors.centerIn: parent
-                text: "Processed words:" + WordModelInstance.totalWordCount + " = " + WordModelInstance.percentage.toFixed(2) + " %"
+                text: WordModelInstance.progressText
             }
         }
     }
