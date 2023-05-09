@@ -4,33 +4,20 @@ import QtQuick.Layouts 1.3
 import WordModelInstance 1.0
 import SortFilterProxyInstance 1.0
 
-Item {
-    id: root
+ListView {
+    spacing: 2
+    model: SortFilterProxyInstance
+    interactive: false
+    delegate: Rectangle {
+        visible: index < SortFilterProxyInstance.maxRows
+        id: rect
+        width: (ListView.view.width / 100) * wordPercentage
+        height: (ListView.view.height / SortFilterProxyInstance.maxRows) - 2
+        color: "lightgreen"
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 1
-
-        Repeater {
-            id: repeater
-            model: SortFilterProxyInstance
-
-            Item {
-                visible: index < SortFilterProxyInstance.maxRows
-
-                Rectangle {
-                    id: rect
-                    width: (root.width / 100) * wordPercentage
-                    height: (root.height / SortFilterProxyInstance.maxRows) - 2
-                    color: "lightgreen"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    text: wordStatText
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
+        Text {
+            visible: index < SortFilterProxyInstance.maxRows
+            text: wordStatText
         }
     }
 }

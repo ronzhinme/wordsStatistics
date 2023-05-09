@@ -32,11 +32,9 @@ void Worker::doWork()
         }
 
         emit sigProcessWord(word);
-        QThread::currentThread()->usleep(0);
     }
 
     emit sigPercentageChanged(100.0);
-    QThread::currentThread()->usleep(0);
     state_ = WorkerState::kIdle;
 }
 
@@ -92,8 +90,8 @@ Controller::Controller()
     worker_.moveToThread(&workerThread_);
     connect(&workerThread_, &QThread::started, &worker_, &Worker::doWork);
     connect(&workerThread_, &QThread::finished, this, [this](){emit sigPercentageChanged(100.0);});
-    connect(&worker_, &Worker::sigProcessWord, this, &Controller::sigProcessWord);
-    connect(&worker_, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged);
+    connect(&worker_, &Worker::sigProcessWord, this, &Controller::sigProcessWord, Qt::BlockingQueuedConnection);
+    connect(&worker_, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged, Qt::BlockingQueuedConnection);
 }
 
 Controller::~Controller()
