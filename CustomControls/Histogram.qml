@@ -17,7 +17,7 @@ ListView {
 
         Text {
             visible: index < SortFilterProxyInstance.maxRows
-            text: wordStatText
+            text: wordStatText !== undefined ? wordStatText : ""
         }
     }
 }
