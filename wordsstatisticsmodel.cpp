@@ -1,5 +1,6 @@
 #include "wordsstatisticsmodel.h"
 
+/// WordsStatisticsModel
 WordsStatisticsModel::WordsStatisticsModel()
     : QAbstractListModel()
     , totalWordCount_(0)
@@ -15,6 +16,11 @@ quint64 WordsStatisticsModel::totalWordCount() const
 
 void WordsStatisticsModel::appendWord(const QString &word)
 {
+    if(word.trimmed().isEmpty())
+    {
+        return;
+    }
+
     ++totalWordCount_;
     emit sigTotalWordsCountChanged();
 
@@ -118,6 +124,7 @@ bool WordsStatisticsModel::setData(const QModelIndex &index, const QVariant &val
     }
 }
 
+/// SortAndFilterProxy
 bool SortAndFilterProxy::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     const auto lastAccessibleRowWordCount = index(maxRows_.value(), 0).data(sortRole()).toUInt();

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QThread>
 #include <QFile>
+#include <QSharedPointer>
 
 class WordFileParser
 {
@@ -34,13 +35,13 @@ public slots:
     void doWork();
     void requestChangeState(WorkerState state);
     WorkerState state() const {return state_;}
-    void setFileName(const QString & filename);
+    void setFileParser(QSharedPointer<WordFileParser> parser);
 signals:
     void sigProcessWord(const QString &word);
     void sigPercentageChanged(double percentage);
 private:
     WorkerState state_;
-    QString filename_;
+    QSharedPointer<WordFileParser> fileParser_;
 };
 
 class Controller : public QObject
@@ -60,8 +61,8 @@ signals:
     void sigPauseRequest();
     void sigResumeRequest();
 private:
-    QThread workerThread_;
-    Worker worker_;
+    QList<QPair<QThread*, Worker*>> workers_;
+    QSharedPointer<WordFileParser> fileParser_;
 };
 
 #endif // CONTROLLER_H
