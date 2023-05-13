@@ -2,40 +2,41 @@
 
 #include <QUrl>
 
+std::mutex ReadMutex;
 Worker::Worker()
     : QObject()
     , state_(WorkerState::kIdle)
+    , fileParser_(nullptr)
 {
 
 }
 
 void Worker::doWork()
 {
-    state_ = WorkerState::kWork;
+    if(!fileParser_)
+    {
+        return;
+    }
 
-    WordFileParser fileParser(filename_);
-    while(!QThread::currentThread()->isInterruptionRequested() && state_ != WorkerState::kCancel && !fileParser.atEnd())
+    state_ = WorkerState::kWork;
+    while(!QThread::currentThread()->isInterruptionRequested() && state_ != WorkerState::kCancel && !fileParser_->atEnd())
     {
         if(state_ == WorkerState::kPause)
         {
-            QThread::currentThread()->yieldCurrentThread();
+            QThread::currentThread()->sleep(1);
             continue;
         }
 
-        const auto percentage = fileParser.getProcessPercentage();
+        std::lock_guard<std::mutex> lock(ReadMutex);
+        const auto percentage = fileParser_->getProcessPercentage();
         emit sigPercentageChanged(percentage);
 
-        const auto word = fileParser.getNextWord();
-        if(word.trimmed().isEmpty())
-        {
-            continue;
-        }
-
+        const auto word = fileParser_->getNextWord();
         emit sigProcessWord(word);
     }
 
-    emit sigPercentageChanged(100.0);
     state_ = WorkerState::kIdle;
+    QThread::currentThread()->quit();
 }
 
 void Worker::requestChangeState(WorkerState state)
@@ -74,58 +75,78 @@ void Worker::requestChangeState(WorkerState state)
     }
 }
 
-void Worker::setFileName(const QString &filename)
+void Worker::setFileParser(QSharedPointer<WordFileParser> parser)
 {
-    if(state_ != WorkerState::kIdle)
-    {
-        return;
-    }
-
-    filename_ = filename;
+    fileParser_= parser;
 }
 
 Controller::Controller()
     : QObject()
+    , workers_(100)
+    , fileParser_(nullptr)
 {
-    worker_.moveToThread(&workerThread_);
-    connect(&workerThread_, &QThread::started, &worker_, &Worker::doWork);
-    connect(&workerThread_, &QThread::finished, this, [this](){emit sigPercentageChanged(100.0);});
-    connect(&worker_, &Worker::sigProcessWord, this, &Controller::sigProcessWord, Qt::BlockingQueuedConnection);
-    connect(&worker_, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged, Qt::BlockingQueuedConnection);
 }
 
 Controller::~Controller()
 {
-    workerThread_.requestInterruption();
-    workerThread_.quit();
-    workerThread_.wait();
+    for(auto i = 0 ; i < workers_.size(); ++i)
+    {
+        auto [thread, worker] = workers_[i];
+        thread->requestInterruption();
+    }
 }
 
 void Controller::start(const QString &filename)
 {
-    if(worker_.state() == WorkerState::kIdle || worker_.state() == WorkerState::kCancel)
+    fileParser_.reset(new WordFileParser(filename));
+    for(auto i = 0 ; i < workers_.size(); ++i)
     {
-        emit sigStarted();
-        worker_.setFileName(filename);
-        workerThread_.start();
+        workers_[i] = {new QThread, new Worker};
+        auto [thread, worker] = workers_[i];
+
+        worker->moveToThread(thread);
+        connect(thread, &QThread::started, worker, &Worker::doWork);
+        connect(thread, &QThread::finished, this, [this](){emit sigPercentageChanged(100.0);});
+        connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+        connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+        connect(worker, &Worker::sigProcessWord, this, &Controller::sigProcessWord, Qt::BlockingQueuedConnection);
+        connect(worker, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged, Qt::BlockingQueuedConnection);
+
+        if(worker->state() == WorkerState::kIdle ||
+                worker->state() == WorkerState::kCancel)
+        {
+            emit sigStarted();
+            worker->setFileParser(fileParser_);
+            thread->start();
+        }
     }
 }
 
 void Controller::pause()
 {
-    worker_.requestChangeState(WorkerState::kPause);
+    for(auto i = 0 ; i < workers_.size(); ++i)
+    {
+        auto [thread, worker] = workers_[i];
+        worker->requestChangeState(WorkerState::kPause);
+    }
 }
 
 void Controller::resume()
 {
-    worker_.requestChangeState(WorkerState::kWork);
+    for(auto i = 0 ; i < workers_.size(); ++i)
+    {
+        auto [thread, worker] = workers_[i];
+        worker->requestChangeState(WorkerState::kWork);
+    }
 }
 
 void Controller::cancel()
 {
-    worker_.requestChangeState(WorkerState::kCancel);
-    workerThread_.quit();
-    workerThread_.wait();
+    for(auto i = 0 ; i < workers_.size(); ++i)
+    {
+        auto [thread, worker] = workers_[i];
+        worker->requestChangeState(WorkerState::kCancel);
+    }
 }
 
 WordFileParser::WordFileParser(const QString &filename)
