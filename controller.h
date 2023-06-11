@@ -3,20 +3,9 @@
 
 #include <QObject>
 #include <QThread>
-#include <QFile>
 #include <QSharedPointer>
 
-class WordFileParser
-{
-public:
-    WordFileParser(const QString &filename);
-    QString getNextWord();
-    double getProcessPercentage() const;
-    bool atEnd();
-private:
-    size_t totalBytes_;
-    QFile file_;
-};
+#include "fileparser.h"
 
 enum class WorkerState
 {
