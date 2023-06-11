@@ -1,7 +1,5 @@
 #include "controller.h"
 
-#include <QUrl>
-
 std::mutex ReadMutex;
 Worker::Worker()
     : QObject()
@@ -147,56 +145,4 @@ void Controller::cancel()
         auto [thread, worker] = workers_[i];
         worker->requestChangeState(WorkerState::kCancel);
     }
-}
-
-WordFileParser::WordFileParser(const QString &filename)
-    : file_(QUrl(filename).toLocalFile())
-{
-    if(!file_.open(QIODevice::ReadOnly))
-    {
-        return;
-    }
-
-    totalBytes_ = file_.size();
-}
-
-QString WordFileParser::getNextWord()
-{
-    if(!file_.isOpen() || totalBytes_ == 0)
-    {
-        return {};
-    }
-
-    QByteArray result;
-    while (!file_.atEnd())
-    {
-        char ch;
-        file_.read(&ch, 1);
-        if(!std::isspace(ch) && !std::ispunct(ch) && std::isgraph(ch)) // словом считаю любую печатную последовательность символов, но не разрывы и пунктуацию
-            result.append(ch);
-        else
-            break;
-    }
-
-    return result;
-}
-
-double WordFileParser::getProcessPercentage() const
-{
-    if(!file_.isOpen() || totalBytes_ == 0)
-    {
-        return 0;
-    }
-
-    return static_cast<double>(file_.pos()) / (static_cast<double>(totalBytes_) / 100.0);
-}
-
-bool WordFileParser::atEnd()
-{
-    if(!file_.isOpen() || totalBytes_ == 0)
-    {
-        return true;
-    }
-
-    return file_.atEnd();
 }
