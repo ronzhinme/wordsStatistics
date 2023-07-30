@@ -34,7 +34,6 @@ void Worker::doWork()
     }
 
     state_ = WorkerState::kIdle;
-    QThread::currentThread()->quit();
 }
 
 void Worker::requestChangeState(WorkerState state)
@@ -107,8 +106,8 @@ void Controller::start(const QString &filename)
         connect(thread, &QThread::finished, this, [this](){emit sigPercentageChanged(100.0);});
         connect(thread, &QThread::finished, worker, &QObject::deleteLater);
         connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-        connect(worker, &Worker::sigProcessWord, this, &Controller::sigProcessWord, Qt::BlockingQueuedConnection);
-        connect(worker, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged, Qt::BlockingQueuedConnection);
+        connect(worker, &Worker::sigProcessWord, this, &Controller::sigProcessWord);
+        connect(worker, &Worker::sigPercentageChanged, this, &Controller::sigPercentageChanged);
 
         if(worker->state() == WorkerState::kIdle ||
                 worker->state() == WorkerState::kCancel)
